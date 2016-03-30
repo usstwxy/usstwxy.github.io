@@ -1,0 +1,760 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  <link href="//fonts.googleapis.com/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="wxy blog" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=0.5.0" />
+
+
+
+
+
+
+<meta name="description" content="前言：openstack的swift安装配置很折腾，在这里整理一下。一些准备的知识：
+两种节点：
+代理节点：运行swift-proxy服务，处理用户请求
+存储节点：运行swift-account，swift-container, swift-object三个服务，实现存储功能。
+
+要做的事情概览：
+每一个节点上都需要一个swift.conf配置文件，一般所有代理节点和存储节点节点都使用一个相同的s">
+<meta property="og:type" content="article">
+<meta property="og:title" content="openstack-swift安装记录">
+<meta property="og:url" content="http://www.wxyblog.com/2015/12/08/openstack-swift-install/index.html">
+<meta property="og:site_name" content="WXY's Blog">
+<meta property="og:description" content="前言：openstack的swift安装配置很折腾，在这里整理一下。一些准备的知识：
+两种节点：
+代理节点：运行swift-proxy服务，处理用户请求
+存储节点：运行swift-account，swift-container, swift-object三个服务，实现存储功能。
+
+要做的事情概览：
+每一个节点上都需要一个swift.conf配置文件，一般所有代理节点和存储节点节点都使用一个相同的s">
+<meta property="og:updated_time" content="2016-03-30T01:32:17.812Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="openstack-swift安装记录">
+<meta name="twitter:description" content="前言：openstack的swift安装配置很折腾，在这里整理一下。一些准备的知识：
+两种节点：
+代理节点：运行swift-proxy服务，处理用户请求
+存储节点：运行swift-account，swift-container, swift-object三个服务，实现存储功能。
+
+要做的事情概览：
+每一个节点上都需要一个swift.conf配置文件，一般所有代理节点和存储节点节点都使用一个相同的s">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"hide"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+  <title> openstack-swift安装记录 | WXY's Blog </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">WXY's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">...</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                openstack-swift安装记录
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2015-12-08T15:29:53+08:00" content="2015-12-08">
+              2015-12-08
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2015/12/08/openstack-swift-install/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2015/12/08/openstack-swift-install/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="前言："><a href="#前言：" class="headerlink" title="前言："></a>前言：</h1><p>openstack的swift安装配置很折腾，在这里整理一下。<br>一些准备的知识：</p>
+<h2 id="两种节点："><a href="#两种节点：" class="headerlink" title="两种节点："></a>两种节点：</h2><ul>
+<li>代理节点：运行swift-proxy服务，处理用户请求</li>
+<li>存储节点：运行swift-account，swift-container, swift-object三个服务，实现存储功能。</li>
+</ul>
+<h2 id="要做的事情概览："><a href="#要做的事情概览：" class="headerlink" title="要做的事情概览："></a>要做的事情概览：</h2><ul>
+<li>每一个节点上都需要一个swift.conf配置文件，一般所有代理节点和存储节点节点都使用一个相同的swift.conf文件。</li>
+<li>代理节点一般要使用memcached优化性能</li>
+<li>每个存储节点都需要划出一块xfs格式的分区用于数据存储</li>
+<li>每个存储节点都需要配置一个rsync服务</li>
+<li>每种swift服务都需要维护一个conf文件。（proxy，account，container，object）</li>
+</ul>
+<h2 id="配置一个代理节点和一个存储节点"><a href="#配置一个代理节点和一个存储节点" class="headerlink" title="配置一个代理节点和一个存储节点"></a>配置一个代理节点和一个存储节点</h2><ul>
+<li>192.168.16.201 代理节点（memcached，swift-proxy）</li>
+<li>192.168.16.202 存储节点（rsync, swift-account, swift-container, swift-object)</li>
+</ul>
+<a id="more"></a>
+<hr>
+<h1 id="配置存储节点"><a href="#配置存储节点" class="headerlink" title="配置存储节点"></a>配置存储节点</h1><h2 id="1-6-首先，使用以下脚本安装所需软件包"><a href="#1-6-首先，使用以下脚本安装所需软件包" class="headerlink" title="(1/6)首先，使用以下脚本安装所需软件包"></a>(1/6)首先，使用以下脚本安装所需软件包</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">apt-get install swift openssh-server rsync memcached python-netifaces \</span><br><span class="line">                python-xattr python-memcache</span><br><span class="line">aptitude install swift-account swift-container swift-object xfsprogs</span><br></pre></td></tr></table></figure>
+<h2 id="2-6-划出一块xfs格式的分区用于数据存储，这里我们使用回环设备"><a href="#2-6-划出一块xfs格式的分区用于数据存储，这里我们使用回环设备" class="headerlink" title="(2/6)划出一块xfs格式的分区用于数据存储，这里我们使用回环设备"></a>(2/6)划出一块xfs格式的分区用于数据存储，这里我们使用回环设备</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># create loopback device</span></span><br><span class="line">mkdir /srv</span><br><span class="line">truncate <span class="_">-s</span> 100GB /srv/swift-disk</span><br><span class="line">mkfs.xfs /srv/swift-disk</span><br><span class="line"></span><br><span class="line"><span class="comment"># create mount point and auto mount</span></span><br><span class="line">sudo mkdir -p /srv/node</span><br><span class="line"><span class="built_in">echo</span> <span class="string">"/srv/swift-disk /srv/node xfs noatime,nodiratime,nobarrier,logbufs=8 0 0"</span> &gt;&gt; /etc/fstab</span><br><span class="line">mount /srv/node</span><br><span class="line"></span><br><span class="line"><span class="comment"># change /srv owner </span></span><br><span class="line">chown -R swift:swift /srv/node</span><br><span class="line">``` </span><br><span class="line"></span><br><span class="line">我们划了100G的空间，将其mount到/srv/node/sdb1这个文件夹下，这个路径很重要，以后会多次用到。</span><br><span class="line"></span><br><span class="line"><span class="comment">## (3/6)配置rsync</span></span><br><span class="line"></span><br><span class="line">``` bash </span><br><span class="line">cat &gt; /etc/rsyncd.conf &lt;&lt; EOF</span><br><span class="line">uid = swift </span><br><span class="line">gid = swift </span><br><span class="line"><span class="built_in">log</span> file = /var/<span class="built_in">log</span>/rsyncd.log </span><br><span class="line">pid file = /var/run/rsyncd.pid </span><br><span class="line">address = 192.168.16.202 </span><br><span class="line">[account]</span><br><span class="line">max connections = 2 </span><br><span class="line">path = /srv/node </span><br><span class="line"><span class="built_in">read</span> only = <span class="literal">false</span> </span><br><span class="line">lock file = /var/lock/account.lock </span><br><span class="line">[container]</span><br><span class="line">max connections = 2 </span><br><span class="line">path = /srv/node </span><br><span class="line"><span class="built_in">read</span> only = <span class="literal">false</span>  </span><br><span class="line">lock file = /var/lock/contianer.lock </span><br><span class="line">[object] </span><br><span class="line">max connections = 2 </span><br><span class="line">path = /srv/node </span><br><span class="line"><span class="built_in">read</span> only = <span class="literal">false</span>  </span><br><span class="line">lock file = /var/lock/object.lock </span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+<p>注意这里的address要写此节点的ip，不要写127.0.0.1；这里的path和我们的mount到的位置相同。<br>修改rsync服务配置 /etc/default/rsync，使其开机自动启动</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">RSYNC-ENABLE = TRUE</span><br></pre></td></tr></table></figure>
+<h2 id="4-6-配置account，container，object三个swift服务"><a href="#4-6-配置account，container，object三个swift服务" class="headerlink" title="(4/6)配置account，container，object三个swift服务"></a>(4/6)配置account，container，object三个swift服务</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># account server config</span></span><br><span class="line">cat &gt; /etc/swift/account-server.conf &lt;&lt; EOF</span><br><span class="line">[DEFAULT]  </span><br><span class="line">devices = /srv/node </span><br><span class="line">mount_check = <span class="literal">false</span>    </span><br><span class="line"><span class="built_in">bind</span>_port = 6002    </span><br><span class="line">user = swift  </span><br><span class="line"><span class="built_in">bind</span>_ip = 0.0.0.0  </span><br><span class="line">workers = 2  </span><br><span class="line">[pipeline:main]  </span><br><span class="line">pipeline = account-server  </span><br><span class="line">[app:account-server]  </span><br><span class="line">use = egg:swift<span class="comment">#account  </span></span><br><span class="line">[account-replicator]  </span><br><span class="line">[account-auditor]  </span><br><span class="line">[account-reaper]</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"><span class="comment"># container server config</span></span><br><span class="line">cat &gt; /etc/swift/container-server.conf &lt;&lt; EOF</span><br><span class="line">[DEFAULT]  </span><br><span class="line">devices = /srv/node </span><br><span class="line">mount_check = <span class="literal">false</span>  </span><br><span class="line"><span class="built_in">bind</span>_ip = 0.0.0.0  </span><br><span class="line"><span class="built_in">bind</span>_port = 6001  </span><br><span class="line">workers = 2  </span><br><span class="line">[pipeline:main]  </span><br><span class="line">pipeline = container-server  </span><br><span class="line">[app:container-server]  </span><br><span class="line">use = egg:swift<span class="comment">#container  </span></span><br><span class="line">[container-replicator]  </span><br><span class="line">[container-updater]  </span><br><span class="line">[container-auditor]  </span><br><span class="line">[container-sync]</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"><span class="comment"># object server config</span></span><br><span class="line">cat &gt; /etc/swift/object-server.conf &lt;&lt; EOF</span><br><span class="line">[DEFAULT]  </span><br><span class="line">devices = /srv/node </span><br><span class="line">mount_check = <span class="literal">false</span>  </span><br><span class="line"><span class="built_in">bind</span>_ip = 0.0.0.0  </span><br><span class="line"><span class="built_in">bind</span>_port = 6000  </span><br><span class="line">workers = 2  </span><br><span class="line">[pipeline:main]  </span><br><span class="line">pipeline = object-server  </span><br><span class="line">[app:object-server]  </span><br><span class="line">use = egg:swift<span class="comment">#object  </span></span><br><span class="line">[object-replicator]  </span><br><span class="line">[object-updater]  </span><br><span class="line">[object-auditor]  </span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+<p>这里的devices路径和我们mount的位置一致。</p>
+<h2 id="5-6-修改swift配置的文件夹的权限"><a href="#5-6-修改swift配置的文件夹的权限" class="headerlink" title="(5/6)修改swift配置的文件夹的权限"></a>(5/6)修改swift配置的文件夹的权限</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chown -R swift:swift /etc/swift/</span><br></pre></td></tr></table></figure>
+<h2 id="6-6-等待swift-conf以及一些ring设置文件（在代理节点生成拷贝过来）"><a href="#6-6-等待swift-conf以及一些ring设置文件（在代理节点生成拷贝过来）" class="headerlink" title="(6/6)等待swift.conf以及一些ring设置文件（在代理节点生成拷贝过来）"></a>(6/6)等待swift.conf以及一些ring设置文件（在代理节点生成拷贝过来）</h2><hr>
+<h1 id="配置代理节点"><a href="#配置代理节点" class="headerlink" title="配置代理节点"></a>配置代理节点</h1><h2 id="1-6-安装对应软件"><a href="#1-6-安装对应软件" class="headerlink" title="(1/6)安装对应软件"></a>(1/6)安装对应软件</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install swift-proxy swift-doc memcached</span><br></pre></td></tr></table></figure>
+<h2 id="2-6-使用openssl生成证书"><a href="#2-6-使用openssl生成证书" class="headerlink" title="(2/6)使用openssl生成证书"></a>(2/6)使用openssl生成证书</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /etc/swift</span><br><span class="line">openssl req -new -x509 -nodes -out cert.crt -keyout cert.key</span><br></pre></td></tr></table></figure>
+<h2 id="3-6-配置memcached"><a href="#3-6-配置memcached" class="headerlink" title="(3/6)配置memcached"></a>(3/6)配置memcached</h2><p>修改/etc/memcached.conf<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="_">-l</span> 127.0.0.1  </span><br><span class="line"><span class="comment">#改为代理节点的ip  </span></span><br><span class="line"><span class="_">-l</span> 192.168.16.201</span><br></pre></td></tr></table></figure></p>
+<h2 id="4-6-配置swift-proxy服务"><a href="#4-6-配置swift-proxy服务" class="headerlink" title="(4/6)配置swift-proxy服务"></a>(4/6)配置swift-proxy服务</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">cat &gt; /etc/swift/proxy-server.conf &lt;&lt; EOF</span><br><span class="line">[DEFAULT]  </span><br><span class="line">bind_port =8080  </span><br><span class="line">bind_ip = 192.168.16.201 </span><br><span class="line">user = swift </span><br><span class="line"></span><br><span class="line">[pipeline:main]  </span><br><span class="line">pipeline = healthcheck cache tempauth proxy-server  </span><br><span class="line"></span><br><span class="line">[app:proxy-server]  </span><br><span class="line">use = egg:swift#proxy  </span><br><span class="line">allow_account_management = true  </span><br><span class="line">account_autocreate = true  </span><br><span class="line"></span><br><span class="line">[filter:tempauth]  </span><br><span class="line">use = egg:swift#tempauth  </span><br><span class="line">user_admin_admin = admin .admin .reseller_admin  </span><br><span class="line">user_test_tester = testing .admin  </span><br><span class="line"></span><br><span class="line">[filter:healthcheck]  </span><br><span class="line">use = egg:swift#healthcheck  </span><br><span class="line">  </span><br><span class="line">[filter:cache]  </span><br><span class="line">use = egg:swift#memcache  </span><br><span class="line">memcache_servers = 192.168.16.201:11211  </span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+<p>这个配置文件中filter:tempauth是一些账户设置</p>
+<h2 id="5-6-创建并配置环-ring"><a href="#5-6-创建并配置环-ring" class="headerlink" title="(5/6)创建并配置环(ring)"></a>(5/6)创建并配置环(ring)</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建环，第一个参数为2^18次方存储分区数，第二个参数是备份次数，第三个参数为1小时可以移动分区一次</span></span><br><span class="line"><span class="built_in">cd</span> /etc/swift</span><br><span class="line">swift-ring-builder account.builder create 18 1 1</span><br><span class="line">swift-ring-builder container.builder create 18 1 1</span><br><span class="line">swift-ring-builder object.builder create 18 1 1</span><br><span class="line"></span><br><span class="line"><span class="comment"># 向ring中添加节点。注意添加多个节点时，应为addd z[n]-192.168.XXX.XXX/XXX </span></span><br><span class="line">swift-ring-builder account.builder add z1-192.168.16.202:6002/sdb1 100</span><br><span class="line">swift-ring-builder container.builder add z1-192.168.16.202:6001/sdb1 100</span><br><span class="line">swift-ring-builder object.builder add z1-192.168.16.202:6000/sdb1 100</span><br><span class="line"></span><br><span class="line"><span class="comment"># 检查环配置</span></span><br><span class="line">swift-ring-builder account.builder</span><br><span class="line">swift-ring-builder container.builder</span><br><span class="line">swift-ring-builder object.builder</span><br><span class="line"></span><br><span class="line"><span class="comment"># 平衡环，需要一段时间，将生成.ring.gz文件</span></span><br><span class="line">swift-ring-builder account.builder rebalance</span><br><span class="line">swift-ring-builder container.builder rebalance</span><br><span class="line">swift-ring-builder object.builder rebalance</span><br></pre></td></tr></table></figure>
+<h2 id="6-6-配置swift-conf，以及拷贝swift-conf和ring文件到存储节点"><a href="#6-6-配置swift-conf，以及拷贝swift-conf和ring文件到存储节点" class="headerlink" title="(6/6)配置swift.conf，以及拷贝swift.conf和ring文件到存储节点"></a>(6/6)配置swift.conf，以及拷贝swift.conf和ring文件到存储节点</h2><p>vi /etc/swift/swfit.conf</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># random unique string that can never change (DO NOT LOSE)</span></span><br><span class="line">swift_<span class="built_in">hash</span>_path_suffix = your_secret_string </span><br><span class="line">swift_<span class="built_in">hash</span>_path_prefix = your_secret_string</span><br></pre></td></tr></table></figure>
+<p>拷贝swift.conf，以及ring配置文件到存储节点<br><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">scp /etc/swift/swift.conf root@192.168.16.202:/etc/swift/</span><br><span class="line">scp /etc/swift/*.ring.gz root@192.168.16.202:/etc/swift/</span><br></pre></td></tr></table></figure></p>
+<hr>
+<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><h2 id="在存储节点和代理节点启动所有swift服务！"><a href="#在存储节点和代理节点启动所有swift服务！" class="headerlink" title="在存储节点和代理节点启动所有swift服务！"></a>在存储节点和代理节点启动所有swift服务！</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">swift-init all start</span><br></pre></td></tr></table></figure>
+<h2 id="查看当前存储状态"><a href="#查看当前存储状态" class="headerlink" title="查看当前存储状态"></a>查看当前存储状态</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">swift -A http://192.168.16.201:8080/auth/v1.0 -U <span class="built_in">test</span>:tester -K testing <span class="built_in">stat</span></span><br></pre></td></tr></table></figure>
+<h2 id="上传一个文件到myfiles-container里（自动新建myfiles-container）"><a href="#上传一个文件到myfiles-container里（自动新建myfiles-container）" class="headerlink" title="上传一个文件到myfiles container里（自动新建myfiles container）"></a>上传一个文件到myfiles container里（自动新建myfiles container）</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">swift -A http://192.168.16.201:8080/auth/v1.0 -U test:tester -K testing upload myfiles [filepath]</span><br></pre></td></tr></table></figure>
+<h2 id="如果测试中出现问题，打开-var-log-syslog查看具体错误信息。"><a href="#如果测试中出现问题，打开-var-log-syslog查看具体错误信息。" class="headerlink" title="如果测试中出现问题，打开/var/log/syslog查看具体错误信息。"></a>如果测试中出现问题，打开/var/log/syslog查看具体错误信息。</h2><p>遇到的两个错误：</p>
+<ul>
+<li>上传文件存储节点返回503，一般是存储节点上的存储路径设置问题。</li>
+<li>上传文件遭到memecached端口无法打开，memcached服务没有启动</li>
+</ul>
+<hr>
+<h1 id="附录（参考文章）"><a href="#附录（参考文章）" class="headerlink" title="附录（参考文章）"></a>附录（参考文章）</h1><p><a href="http://www.kissthink.com/archive/4175.html" target="_blank" rel="external">http://www.kissthink.com/archive/4175.html</a><br><a href="http://blog.csdn.net/zhu_liangwei/article/details/7860226" target="_blank" rel="external">http://blog.csdn.net/zhu_liangwei/article/details/7860226</a> (注意此文章的路径设置有些问题)</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2015/09/20/nginx-lua/" rel="next" title="nginx+lua一键配置安装手册">
+                <i class="fa fa-chevron-left"></i> nginx+lua一键配置安装手册
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2015/12/08/openstack-swift-install/"
+           data-title="openstack-swift安装记录" data-url="http://www.wxyblog.com/2015/12/08/openstack-swift-install/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/avatar.jpg"
+               alt="WXY" />
+          <p class="site-author-name" itemprop="name">WXY</p>
+          <p class="site-description motion-element" itemprop="description">Winter is coming.</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">7</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://www.github/usstwxy" target="_blank">
+                  
+                    <i class="fa fa-github"></i> GitHub
+                  
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://www.blog.csdn.net/wxy__" target="_blank">
+                  
+                    <i class="fa fa-globe"></i> CSDN
+                  
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        <div class="links-of-blogroll motion-element">
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator">
+            <i class="fa fa-angle-double-up"></i>
+          </div>
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言："><span class="nav-number">1.</span> <span class="nav-text">前言：</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#两种节点："><span class="nav-number">1.1.</span> <span class="nav-text">两种节点：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#要做的事情概览："><span class="nav-number">1.2.</span> <span class="nav-text">要做的事情概览：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置一个代理节点和一个存储节点"><span class="nav-number">1.3.</span> <span class="nav-text">配置一个代理节点和一个存储节点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#配置存储节点"><span class="nav-number">2.</span> <span class="nav-text">配置存储节点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-6-首先，使用以下脚本安装所需软件包"><span class="nav-number">2.1.</span> <span class="nav-text">(1/6)首先，使用以下脚本安装所需软件包</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-6-划出一块xfs格式的分区用于数据存储，这里我们使用回环设备"><span class="nav-number">2.2.</span> <span class="nav-text">(2/6)划出一块xfs格式的分区用于数据存储，这里我们使用回环设备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-6-配置account，container，object三个swift服务"><span class="nav-number">2.3.</span> <span class="nav-text">(4/6)配置account，container，object三个swift服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-6-修改swift配置的文件夹的权限"><span class="nav-number">2.4.</span> <span class="nav-text">(5/6)修改swift配置的文件夹的权限</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-6-等待swift-conf以及一些ring设置文件（在代理节点生成拷贝过来）"><span class="nav-number">2.5.</span> <span class="nav-text">(6/6)等待swift.conf以及一些ring设置文件（在代理节点生成拷贝过来）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#配置代理节点"><span class="nav-number">3.</span> <span class="nav-text">配置代理节点</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-6-安装对应软件"><span class="nav-number">3.1.</span> <span class="nav-text">(1/6)安装对应软件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-6-使用openssl生成证书"><span class="nav-number">3.2.</span> <span class="nav-text">(2/6)使用openssl生成证书</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-6-配置memcached"><span class="nav-number">3.3.</span> <span class="nav-text">(3/6)配置memcached</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-6-配置swift-proxy服务"><span class="nav-number">3.4.</span> <span class="nav-text">(4/6)配置swift-proxy服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-6-创建并配置环-ring"><span class="nav-number">3.5.</span> <span class="nav-text">(5/6)创建并配置环(ring)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-6-配置swift-conf，以及拷贝swift-conf和ring文件到存储节点"><span class="nav-number">3.6.</span> <span class="nav-text">(6/6)配置swift.conf，以及拷贝swift.conf和ring文件到存储节点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#测试"><span class="nav-number">4.</span> <span class="nav-text">测试</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#在存储节点和代理节点启动所有swift服务！"><span class="nav-number">4.1.</span> <span class="nav-text">在存储节点和代理节点启动所有swift服务！</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#查看当前存储状态"><span class="nav-number">4.2.</span> <span class="nav-text">查看当前存储状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#上传一个文件到myfiles-container里（自动新建myfiles-container）"><span class="nav-number">4.3.</span> <span class="nav-text">上传一个文件到myfiles container里（自动新建myfiles container）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#如果测试中出现问题，打开-var-log-syslog查看具体错误信息。"><span class="nav-number">4.4.</span> <span class="nav-text">如果测试中出现问题，打开/var/log/syslog查看具体错误信息。</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#附录（参考文章）"><span class="nav-number">5.</span> <span class="nav-text">附录（参考文章）</span></a></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator">
+            <i class="fa fa-angle-double-down"></i>
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2015 - 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">WXY</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+
+  
+
+
+
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=0.5.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=0.5.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=0.5.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=0.5.0"></script>
+
+
+
+  
+  
+<script type="text/javascript" src="/js/src/scrollspy.js?v=0.5.0"></script>
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 1 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = NexT.utils.escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    NexT.motion.middleWares.sidebar = function () {
+      var $tocContent = $('.post-toc-content');
+
+      if (CONFIG.sidebar.display === 'post' || CONFIG.sidebar.display === 'always') {
+        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
+          NexT.utils.displaySidebar();
+        }
+      }
+    };
+  });
+</script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=0.5.0"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"wxyblog123"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+  
+
+
+
+
+
+  
+  
+  
+
+  
+
+  
+
+</body>
+</html>
