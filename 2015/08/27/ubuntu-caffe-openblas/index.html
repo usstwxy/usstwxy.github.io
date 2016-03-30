@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="wxy blog" />
+  <meta name="keywords" content="caffe,openblas," />
 
 
 
@@ -63,7 +63,7 @@
 <meta property="og:url" content="http://www.wxyblog.com/2015/08/27/ubuntu-caffe-openblas/index.html">
 <meta property="og:site_name" content="WXY's Blog">
 <meta property="og:description" content="一些概念使用Caffe的模型做分类时，其运算大概是这样：把输入的图像当做矩阵，一直不停的和模型里面的卷积层kernel做卷积，然后推给pooling层做缩放，最后得到分类结果。最耗时的部分应该在于卷积的操作，Caffe把卷积这种操作转化成了矩阵相乘。而Caffe使用了BLAS的矩阵相乘接口。BLAS是一个数学函数接口标准，有很多个实现。按照Caffe官方ubuntu的安装文档默认安装的是ATLAS">
-<meta property="og:updated_time" content="2016-03-30T01:49:17.978Z">
+<meta property="og:updated_time" content="2016-03-30T13:50:14.710Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ubuntu上Caffe使用OpenBLAS多线程加速">
 <meta name="twitter:description" content="一些概念使用Caffe的模型做分类时，其运算大概是这样：把输入的图像当做矩阵，一直不停的和模型里面的卷积层kernel做卷积，然后推给pooling层做缩放，最后得到分类结果。最耗时的部分应该在于卷积的操作，Caffe把卷积这种操作转化成了矩阵相乘。而Caffe使用了BLAS的矩阵相乘接口。BLAS是一个数学函数接口标准，有很多个实现。按照Caffe官方ubuntu的安装文档默认安装的是ATLAS">
@@ -147,12 +147,32 @@
         </li>
       
         
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
         <li class="menu-item menu-item-archives">
           <a href="/archives" rel="section">
             
               <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
             
             归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-tags fa-fw"></i> <br />
+            
+            标签
           </a>
         </li>
       
@@ -260,6 +280,14 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/caffe/" rel="tag">#caffe</a>
+          
+            <a href="/tags/openblas/" rel="tag">#openblas</a>
+          
+        </div>
+      
 
       
         <div class="post-nav">
@@ -355,6 +383,13 @@
           
 
           
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
 
         </nav>
 
@@ -364,7 +399,7 @@
           
             
               <span class="links-of-author-item">
-                <a href="https://www.github/usstwxy" target="_blank">
+                <a href="https://www.github.com/usstwxy" target="_blank">
                   
                     <i class="fa fa-github"></i> GitHub
                   
@@ -372,7 +407,7 @@
               </span>
             
               <span class="links-of-author-item">
-                <a href="http://www.blog.csdn.net/wxy__" target="_blank">
+                <a href="http://blog.csdn.net/wxy__" target="_blank">
                   
                     <i class="fa fa-globe"></i> CSDN
                   

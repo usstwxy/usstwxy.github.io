@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="wxy blog" />
+  <meta name="keywords" content="a80,neon," />
 
 
 
@@ -63,7 +63,7 @@
 <meta property="og:url" content="http://www.wxyblog.com/2015/08/23/a80-neon/index.html">
 <meta property="og:site_name" content="WXY's Blog">
 <meta property="og:description" content="介绍NEON是ARM芯片上一个SIMD（单指令多数据）类型的扩展指令集，使用NEON可以对程序计算敏感的部分做并行加速。使用NEON优化一般来说可以使程序提速1-3倍，在嵌入式这种性能敏感的环境下有时还是挺有用的。使用NEON可以有两种方式，一种是直接使用NEON的汇编指令，一种是使用C预言的接口，C接口是比较好用的，但是有时若想对编译的代码做完整的控制，手写汇编还是有必要的。大多数ARM的CPU">
-<meta property="og:updated_time" content="2016-03-30T01:34:30.982Z">
+<meta property="og:updated_time" content="2016-03-30T13:49:35.407Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="在A80开发板上使用NEON优化">
 <meta name="twitter:description" content="介绍NEON是ARM芯片上一个SIMD（单指令多数据）类型的扩展指令集，使用NEON可以对程序计算敏感的部分做并行加速。使用NEON优化一般来说可以使程序提速1-3倍，在嵌入式这种性能敏感的环境下有时还是挺有用的。使用NEON可以有两种方式，一种是直接使用NEON的汇编指令，一种是使用C预言的接口，C接口是比较好用的，但是有时若想对编译的代码做完整的控制，手写汇编还是有必要的。大多数ARM的CPU">
@@ -147,12 +147,32 @@
         </li>
       
         
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
         <li class="menu-item menu-item-archives">
           <a href="/archives" rel="section">
             
               <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
             
             归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-tags fa-fw"></i> <br />
+            
+            标签
           </a>
         </li>
       
@@ -261,6 +281,14 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/a80/" rel="tag">#a80</a>
+          
+            <a href="/tags/neon/" rel="tag">#neon</a>
+          
+        </div>
+      
 
       
         <div class="post-nav">
@@ -356,6 +384,13 @@
           
 
           
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
 
         </nav>
 
@@ -365,7 +400,7 @@
           
             
               <span class="links-of-author-item">
-                <a href="https://www.github/usstwxy" target="_blank">
+                <a href="https://www.github.com/usstwxy" target="_blank">
                   
                     <i class="fa fa-github"></i> GitHub
                   
@@ -373,7 +408,7 @@
               </span>
             
               <span class="links-of-author-item">
-                <a href="http://www.blog.csdn.net/wxy__" target="_blank">
+                <a href="http://blog.csdn.net/wxy__" target="_blank">
                   
                     <i class="fa fa-globe"></i> CSDN
                   
